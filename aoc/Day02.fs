@@ -7,24 +7,29 @@ module Day02
    
     [<Literal>]
     let maxBlue = 14
-   
-    let isRoundPossible (round : string array) =
-        Array.forall (fun (x : string) ->
+
+    let isGamePossible gameMap =
+        gameMap
+        |> Array.forall (
+            Map.forall (fun k v ->
+                match k with
+                | "red" -> v <= maxRed
+                | "green" -> v <= maxGreen 
+                | "blue" -> v <= maxBlue
+                | _ -> failwith "Unsupported color"
+                )
+        )
+
+    let buildRoundMap (round : string array) =
+        Array.map (fun (x : string) ->
             x.Trim()
             |> fun x -> x.Split ' '
             |> Array.toList
-            |> fun x ->
-                match x with
-                | count::color ->
-                    match color |> List.head with
-                    | "red" -> count |> int <= maxRed
-                    | "green" -> count |> int <= maxGreen 
-                    | "blue" -> count |> int <= maxBlue
-                    | _ -> failwith "Unsupported color"
-                | [] -> failwith "Empty list not expected"    
+            |> fun tmp -> (tmp.Tail.Head, tmp.Head |> int) 
         ) round
+        |> Map.ofArray
 
-    let isGamePossible (str : string) =
+    let buildGameMap (str : string) =
         str.Split "Game "
         |> Array.tail
         |> Array.head
@@ -33,15 +38,19 @@ module Day02
         |> fun x ->
             match x with
             | h::t ->
-                if t.Head
-                    |> fun y -> y.Split ';'
-                    |> Array.map (fun y -> y.Split ',')
-                    |> Array.forall isRoundPossible
-                then h.Trim() |> int
-                else 0
+                t.Head
+                |> fun y -> y.Split ';'
+                |> Array.map (fun y -> y.Split ',')
+                |> Array.map buildRoundMap
+                |> fun y -> (h |> int, y)
             | [] -> failwith "Empty list should not happen"
 
-    let evaluate (x : string) =
+    let parseInput (x : string) =
         x.Split [|'\n'|]
         |> Array.toList
-        |> List.fold (fun total n -> total + isGamePossible n) 0
+        |> List.map (fun n -> buildGameMap n)
+        |> Map.ofList
+
+    let part1 (x : string) =
+        parseInput x
+        |> Map.fold (fun total k v -> total + (if isGamePossible v then k else 0)) 0
