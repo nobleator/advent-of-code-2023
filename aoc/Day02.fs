@@ -20,6 +20,28 @@ module Day02
                 )
         )
 
+    let getCubeSetPower (gameMap : Map<string, int> array) =
+        gameMap
+        |> Array.fold (fun acc x ->
+            let r1, g1, b1 = acc
+            let r2 =
+                match Map.tryFind "red" x with
+                | Some z -> z
+                | None -> 0
+            let g2 =
+                match Map.tryFind "green" x with
+                | Some z -> z
+                | None -> 0
+            let b2 =
+                match Map.tryFind "blue" x with
+                | Some z -> z
+                | None -> 0
+            (max r1 r2, max g1 g2, max b1 b2)
+        ) (0, 0, 0)
+        |> fun x ->
+            let (a, b, c) = x
+            a * b * c 
+
     let buildRoundMap (round : string array) =
         Array.map (fun (x : string) ->
             x.Trim()
@@ -54,3 +76,7 @@ module Day02
     let part1 (x : string) =
         parseInput x
         |> Map.fold (fun total k v -> total + (if isGamePossible v then k else 0)) 0
+
+    let part2 (x : string) =
+        parseInput x
+        |> Map.fold (fun total k v -> total + getCubeSetPower v) 0
