@@ -64,6 +64,22 @@ module Day03
                     ) []
                 rowAcc @ tmp
             ) []
+        let gears =
+            chars
+            |> Array.mapi (fun yIdx r -> (yIdx, r))
+            |> Array.fold (fun rowAcc row ->
+                let yIdx, r = row
+                let tmp =
+                    r
+                    |> List.mapi (fun xIdx c -> (xIdx, c))
+                    |> List.fold (fun colAcc col ->
+                        let xIdx, c = col
+                        match c with
+                        | '*' -> colAcc @ [{x=xIdx; y=yIdx}]
+                        | _ -> colAcc
+                    ) []
+                rowAcc @ tmp
+            ) []
         let numbers =
             chars
             |> Array.mapi (fun yIdx r -> (yIdx, r))
@@ -82,10 +98,10 @@ module Day03
             ) []
             |> consolidateNumbers
             |> convertToInt
-        (symbols, numbers)
+        (symbols, numbers, gears)
 
     let part1 (x : string) =
-        let symbols, numbers = parseInput x
+        let symbols, numbers, _ = parseInput x
         numbers
         |> List.fold (fun acc x ->
             let adj =
@@ -100,6 +116,19 @@ module Day03
             if adj then acc + (x |> snd) else acc
         ) 0
 
-    // let part2 (x : string) =
-    //     parseInput x
-    //     |> Map.fold (fun total k v -> total + getCubeSetPower v) 0
+    let part2 (x : string) =
+        let _, numbers, gears = parseInput x
+        gears
+        |> List.fold (fun acc x ->
+            let adj =
+                numbers
+                |> List.filter (fun (y, v) ->
+                    y
+                    |> List.exists (fun z ->
+                        adjacent x z
+                    )
+                )
+            match adj.Length with
+            | 2 -> acc + (adj |> List.map (fun x -> x |> snd) |> List.reduce (fun a b -> a * b))
+            | _ -> acc
+        ) 0
