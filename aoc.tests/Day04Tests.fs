@@ -14,3 +14,8 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11"
 let ``Day 4-1 sample`` () =
     let res = Day04.part1 sample
     Assert.Equal(13, res)
+
+[<Fact>]
+let ``Day 4-2 sample`` () =
+    let res = Day04.part2 sample
+    Assert.Equal(30, res)

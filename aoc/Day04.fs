@@ -27,5 +27,36 @@ module Day04
             acc + inc
         ) 0
 
+    let scoreByIndex games =
+        games
+        |> Array.mapi (fun i x ->
+            let w, p = x
+            let m = Set.intersect w p
+            (i, m.Count)
+        )
+        |> Map.ofArray
+
     let part1 (x : string) =
         parseInput x |> score
+
+    let part2 (x : string) =
+        let scores =
+            x
+            |> parseInput
+            |> scoreByIndex
+        scores
+        |> Map.fold (fun acc k v ->
+            let total, copies = acc
+            match copies with
+            | h::t ->                    
+                (
+                    total + 1 + h,
+                    t
+                    |> List.mapi (fun i x -> 
+                        if i < v then x + 1 + h
+                        else x
+                    )
+                )
+            | [] -> failwith "Unexpected empty list"
+        ) (0, List.init scores.Count (fun _ -> 0))
+        |> fst
