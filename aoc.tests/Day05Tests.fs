@@ -42,7 +42,7 @@ let ``Day 5-1 sample`` () =
     let res = Day05.part1 sample
     Assert.Equal(35L, res)
 
-// [<Fact>]
-// let ``Day 5-2 sample`` () =
-//     let res = Day05.part2 sample
-//     Assert.Equal(30, res)
+[<Fact>]
+let ``Day 5-2 sample`` () =
+    let res = Day05.part2 sample
+    Assert.Equal(46L, res)
