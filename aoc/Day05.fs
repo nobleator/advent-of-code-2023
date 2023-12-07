@@ -73,50 +73,69 @@ module Day05
             getUltimateMappedValue j t
         | _ -> i
 
-    let splitSeeds (seeds : (int64 * int64) list, maps) =
+    type MatchType =
+    | SeedContained
+    | SeedExcluded
+    | IntersectionUpper
+    | IntersectionLower
+    | MapContained
+
+    let splitSeeds seeds maps =
         seeds
-        |> List.fold(fun seedList seed ->
+        |> List.fold(fun acc seed ->
             let seedStart, seedRange = seed
             let seedEdge = seedStart + seedRange
-            let splits =
-                maps
-                |> List.fold (fun acc map ->
-                    let dest, src, rng = map
-                    let mapEdge = src + rng
+            maps
+            |> List.map (fun map ->
+                let _, src, rng = map
+                let mapEdge = src + rng
+                (
                     match (seedStart, seedEdge) with
-                    | (a, b) when a >= src && a < mapEdge -> acc @ [(seedStart - src + dest, seedEdge - src + dest);]
-                    | (a, b) when a < src && b >= src && b < mapEdge -> acc @ [(dest, dest + seedEdge - src);]
-                    | (a, b) when a >= src && a < mapEdge && b >= mapEdge && b < mapEdge -> acc @ [(dest + seedStart - src, dest + rng - 1)]
-                    | (a, b) when a < src && b >= mapEdge -> acc @ [(dest, dest + rng - 1)]
-                    // TODO need to avoid adding duplicates
-                    | _ -> acc @ [(seedStart, seedRange)]
-                ) []
-                // |> Set.ofList
-                // |> Set.toList
-            seedList @ splits
+                    | (a, b) when a >= src && b <= mapEdge -> SeedContained
+                    | (a, b) when (a < src && b < src) || (a > mapEdge && b > mapEdge) -> SeedExcluded
+                    | (a, b) when a >= src && b > mapEdge -> IntersectionUpper
+                    | (a, b) when a < src && b > src && b <= mapEdge -> IntersectionLower
+                    | (a, b) when a < src && b >= mapEdge -> MapContained
+                    | _ -> failwith "Seed could not be split"
+                    , map
+                )
+            )
+            |> List.collect (fun x ->
+                let _, src, rng = x |> snd
+                let mapEdge: int64 = src + rng
+                match x |> fst with
+                | SeedContained | SeedExcluded -> []
+                | IntersectionUpper -> [(seedStart, mapEdge - seedStart - 1L); (mapEdge, seedEdge - mapEdge)]
+                | IntersectionLower -> [(seedStart, src - seedStart - 1L); (src, seedEdge - src)]
+                | MapContained -> [(seedStart, src - seedStart - 1L); (src, rng - 1L); (mapEdge, seedEdge - mapEdge)]
+            )
+            |> fun x -> 
+                match x with
+                | [] -> acc @ [(seedStart, seedRange - 1L)]
+                | _ -> acc @ x
+            |> List.sort
+            |> List.distinctBy (fun x -> x |> fst)
         ) []
 
-    let rec foo seedList mapList =
+    let rec splitAndMap seedList mapList =
         match mapList with
         | currMap::restMaps ->
-            let splitSeedList = splitSeeds seedList currMap
-            let newSeedList =
-                splitSeedList
-                |> List.map (fun curr -> 
-                    let currVal, range = curr
-                    currMap
-                    |> List.filter (fun m ->
-                        let _, b, r = m
-                        currVal > b && currVal < (b + r)
-                    )
-                    |> fun x ->
-                        match x with
-                            | h::_ ->
-                                let a, b, _ = h
-                                (currVal - (b - a), range)
-                            | [] -> (currVal, range)
+            splitSeeds seedList currMap
+            |> List.map (fun curr -> 
+                let currVal, range = curr
+                currMap
+                |> List.filter (fun m ->
+                    let _, b, r = m
+                    currVal >= b && currVal < (b + r)
                 )
-            foo newSeedList restMaps
+                |> fun x ->
+                    match x with
+                    | h::_ ->
+                        let a, b, _ = h
+                        (currVal - (b - a), range)
+                    | [] -> (currVal, range)
+            )
+            |> fun newList -> splitAndMap newList restMaps
         | _ -> seedList
 
     let part1 (str : string) =
@@ -130,7 +149,6 @@ module Day05
 
     let part2 (str : string) =
         let s, m = parseInput2 str
-        // let tmp = splitSeeds s m
-        foo s m
+        splitAndMap s m
         |> List.minBy fst
         |> fst
