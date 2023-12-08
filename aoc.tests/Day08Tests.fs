@@ -14,7 +14,7 @@ open Xunit
 // ZZZ = (ZZZ, ZZZ)"
 
 [<Fact>]
-let ``Day 7-1 sample 1`` () =
+let ``Day 8-1 sample 1`` () =
     let sample = @"RL
 
 AAA = (BBB, CCC)
@@ -28,7 +28,7 @@ ZZZ = (ZZZ, ZZZ)"
     Assert.Equal(2, res)
 
 [<Fact>]
-let ``Day 7-1 sample 2`` () =
+let ``Day 8-1 sample 2`` () =
     let sample = @"LLR
 
 AAA = (BBB, BBB)
