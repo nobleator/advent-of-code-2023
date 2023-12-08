@@ -24,13 +24,13 @@ module Day08
         let newDepth = depth + 1
         match instructions with
         | currInst::restInst ->
-            let nextNode =
+            let nextNode : string =
                 match currInst with
                 | 'L' -> Map.find currNode network |> fst
                 | 'R' -> Map.find currNode network |> snd
                 | _ -> failwith "Unexpected instruction"
-            match nextNode with
-            | "ZZZ" -> newDepth
+            match nextNode.EndsWith('Z') with
+            | true -> newDepth
             | _ -> traverse newDepth nextNode network restInst originalInstructions
         | _ -> traverse depth currNode network originalInstructions originalInstructions
 
@@ -39,4 +39,10 @@ module Day08
         traverse 0 "AAA" n i i
 
     let part2 (str : string) =
-        0
+        let i, n = parseInput str
+        n.Keys 
+        |> Seq.toList
+        |> List.filter (fun x -> x.EndsWith('A'))
+        |> List.map (fun node -> traverse 0 node n i i |> int64)
+        |> List.toArray
+        |> MathNet.Numerics.Euclid.LeastCommonMultiple
