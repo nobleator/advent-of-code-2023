@@ -15,9 +15,22 @@ module Day09
             |> (+) (Array.last numbers)
         | false -> 0
 
+    let rec extrapolate numbers =
+        match numbers |> Array.exists (fun x -> not (x = 0)) with
+        | true ->
+            numbers
+            |> Array.pairwise
+            |> Array.map (fun (l, r) ->
+                r - l
+            )
+            |> extrapolate
+            |> fun x -> Array.head numbers - x 
+        | false -> 0
+
     let part1 (str : string) =
         parseInput str
         |> Array.fold (fun acc row -> acc + predict row) 0
 
     let part2 (str : string) =
-        0
+        parseInput str
+        |> Array.fold (fun acc row -> acc + extrapolate row) 0

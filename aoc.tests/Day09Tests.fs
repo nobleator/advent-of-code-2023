@@ -15,4 +15,4 @@ let ``Day 9-1 sample`` () =
 [<Fact>]
 let ``Day 9-2 sample`` () =
     let res = Day09.part2 sample
-    Assert.Equal(6, res)
+    Assert.Equal(2, res)
