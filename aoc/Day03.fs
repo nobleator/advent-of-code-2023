@@ -12,7 +12,9 @@ module Day03
             | (n::res)::ns ->
                 if cond l n
                 then (l::n::res)::ns
-                else [l]::(n::res)::ns)
+                else [l]::(n::res)::ns
+            | _ -> failwith "Unexpected pattern found while chunking"
+        )
     
     let consolidateNumbers numList =
         numList
