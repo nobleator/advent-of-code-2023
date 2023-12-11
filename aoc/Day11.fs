@@ -1,7 +1,7 @@
 module Day11
     open Day03
 
-    let parseInput (str : string) =
+    let parseInput (str : string, expansionFactor : int) =
         let mat =
             str.Split "\n"
             |> Array.map Seq.toArray
@@ -23,14 +23,14 @@ module Day11
                             [0..yIdx]
                             |> List.fold (fun acc x ->
                                 match mat[x,*] |> Array.forall (fun c -> c = '.') with
-                                | true -> acc + 1
+                                | true -> acc + expansionFactor - 1
                                 | false -> acc
                             ) 0
                         let xOffset =
                             [0..xIdx]
                             |> List.fold (fun acc x ->
                                 match mat[*,x] |> Array.forall (fun c -> c = '.') with
-                                | true -> acc + 1
+                                | true -> acc + expansionFactor - 1
                                 | false -> acc
                             ) 0
                         colAcc @ [{x=(xIdx + xOffset); y=(yIdx + yOffset)}]
@@ -49,11 +49,16 @@ module Day11
         abs(p1.x - p2.x) + abs(p1.y - p2.y)
 
     let part1 (str : string) =
-        parseInput str
+        parseInput (str, 2)
         |> List.sortBy (fun x -> x.x + x.y)
         |> combinations 
         |> List.map distance
         |> List.sum
 
-    // let part2 (str : string) =
-    //     0
+    let part2 (str : string, expansionFactor : int) =
+        parseInput (str, expansionFactor)
+        |> List.sortBy (fun x -> x.x + x.y)
+        |> combinations 
+        |> List.map distance
+        |> List.map int64
+        |> List.sum
