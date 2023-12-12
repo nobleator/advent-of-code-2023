@@ -20,6 +20,20 @@
     <Compile Include="Day09Tests.fs" />
     <Compile Include="Day10Tests.fs" />
     <Compile Include="Day11Tests.fs" />
+    <Compile Include="Day12Tests.fs" />
+    <Compile Include="Day13Tests.fs" />
+    <Compile Include="Day14Tests.fs" />
+    <Compile Include="Day15Tests.fs" />
+    <Compile Include="Day16Tests.fs" />
+    <Compile Include="Day17Tests.fs" />
+    <Compile Include="Day18Tests.fs" />
+    <Compile Include="Day19Tests.fs" />
+    <Compile Include="Day20Tests.fs" />
+    <Compile Include="Day21Tests.fs" />
+    <Compile Include="Day22Tests.fs" />
+    <Compile Include="Day23Tests.fs" />
+    <Compile Include="Day24Tests.fs" />
+    <Compile Include="Day25Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
