@@ -10,71 +10,67 @@ module Day16
     let getByPoint grid p =
         Array2D.get grid p.y p.x
 
-    let mutable seen = Set.empty
-
-    let rec traverse path grid =
-        let p, d = path |> List.head
+    let rec traverse vector grid seen =
+        let p, d = vector
         let gridHeight = Array2D.length1 grid
         let gridWidth = Array2D.length2 grid
         match d with
         | North ->
             let p' = {x=p.x; y=p.y - 1}
             match p'.y < 0 with
-            | true -> path |> List.map fst |> Set.ofList
+            | true -> seen
             | false ->
                 let nextCell = getByPoint grid p'
                 match nextCell with
-                | '.' | '|' -> checkAndRec (p', North) path grid
-                | '/' -> checkAndRec (p', East) path grid
-                | '\\' -> checkAndRec (p', West) path grid
-                | '-' -> Set.union (checkAndRec (p', East) path grid) (checkAndRec (p', West) path grid)
+                | '.' | '|' -> checkAndRec (p', North) grid seen
+                | '/' -> checkAndRec (p', East) grid seen
+                | '\\' -> checkAndRec (p', West) grid seen
+                | '-' -> checkAndRec (p', East) grid seen |> checkAndRec (p', West) grid
                 | _ -> failwith "All symbols in grid must be . / \\ - or |"
         | South ->
             let p' = {x=p.x; y=p.y + 1}
             match p'.y >= gridHeight with
-            | true -> path |> List.map fst |> Set.ofList
+            | true -> seen
             | false ->
                 let nextCell = getByPoint grid p'
                 match nextCell with
-                | '.' | '|' -> checkAndRec (p', South) path grid
-                | '/' -> checkAndRec (p', West) path grid
-                | '\\' -> checkAndRec (p', East) path grid
-                | '-' -> Set.union (checkAndRec (p', East) path grid) (checkAndRec (p', West) path grid)
+                | '.' | '|' -> checkAndRec (p', South) grid seen
+                | '/' -> checkAndRec (p', West) grid seen
+                | '\\' -> checkAndRec (p', East) grid seen
+                | '-' -> checkAndRec (p', East) grid seen |> checkAndRec (p', West) grid
                 | _ -> failwith "All symbols in grid must be . / \\ - or |"
         | East ->
             let p' = {x=p.x + 1; y=p.y}
             match p'.x >= gridWidth with
-            | true -> path |> List.map fst |> Set.ofList
+            | true -> seen
             | false ->
                 let nextCell = getByPoint grid p'
                 match nextCell with
-                | '.' | '-' -> checkAndRec (p', East) path grid
-                | '/' -> checkAndRec (p', North) path grid
-                | '\\' -> checkAndRec (p', South) path grid
-                | '|' -> Set.union (checkAndRec (p', North) path grid) (checkAndRec (p', South) path grid)
+                | '.' | '-' -> checkAndRec (p', East) grid seen
+                | '/' -> checkAndRec (p', North) grid seen
+                | '\\' -> checkAndRec (p', South) grid seen
+                | '|' -> checkAndRec (p', North) grid seen |> checkAndRec (p', South) grid
                 | _ -> failwith "All symbols in grid must be . / \\ - or |"
         | West ->
             let p' = {x=p.x - 1; y=p.y}
             match p'.x < 0 with
-            | true -> path |> List.map fst |> Set.ofList
+            | true -> seen
             | false ->
                 let nextCell = getByPoint grid p'
                 match nextCell with
-                | '.' | '-' -> checkAndRec (p', West) path grid
-                | '/' -> checkAndRec (p', South) path grid
-                | '\\' -> checkAndRec (p', North) path grid
-                | '|' -> Set.union (checkAndRec (p', North) path grid) (checkAndRec (p', South) path grid)
+                | '.' | '-' -> checkAndRec (p', West) grid seen
+                | '/' -> checkAndRec (p', South) grid seen
+                | '\\' -> checkAndRec (p', North) grid seen
+                | '|' -> checkAndRec (p', North) grid seen |> checkAndRec (p', South) grid
                 | _ -> failwith "All symbols in grid must be . / \\ - or |"
-    and checkAndRec vector path grid =
+    and checkAndRec vector grid seen =
         match Set.contains vector seen with
-        | true -> path |> List.map fst |> Set.ofList
-        | false ->
-            seen <- Set.add vector seen
-            traverse ([vector] @ path) grid
+        | true -> seen
+        | false -> traverse vector grid (Set.add vector seen)
 
     let part1 (str : string) =
-        parseInput str |> traverse [({x=(-1); y=0}, East)] |> ignore
-        Set.count (seen |> Set.map fst)
+        let grid = parseInput str
+        traverse ({x=(-1); y=0}, East) grid Set.empty |> Set.map fst |> Set.count
 
     let part2 (str : string) =
         -1
