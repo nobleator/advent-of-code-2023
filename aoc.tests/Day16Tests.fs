@@ -63,4 +63,4 @@ let ``Day 16-1 overlapping cycle`` () =
 [<Fact>]
 let ``Day 16-2 sample`` () =
     let res = Day16.part2 sample
-    Assert.Equal(0, res)
+    Assert.Equal(51, res)
