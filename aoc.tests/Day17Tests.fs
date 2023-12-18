@@ -1,6 +1,8 @@
 module Day17Tests
 
 open Xunit
+open Day03
+open Day17
 
 [<Literal>]
 let sample = @"2413432311323

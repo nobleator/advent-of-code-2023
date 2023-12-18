@@ -1,115 +1,65 @@
 module Day17
     open Day03
-    open Day11
-    open Day14
-    open Day16
     open System.Collections.Generic
 
-    type Node = { point: Point; direction: Direction; Length: int; }
+    type Node = { point: Point; direction: int * int; length: int; }
+    type Node' = { Node: Node; HeatLoss: int; }
 
-    let rec reconstruct acc node cameFrom maxLength =
-        match maxLength < 0 || List.length acc < maxLength with
-        | true -> 
-            match Map.tryFind node cameFrom with
-            | None -> node :: acc
-            | Some parent -> reconstruct (node :: acc) parent cameFrom maxLength
-        | false -> acc
-    
-    let getNeighbors node grid =
-        let gridHeight = Array2D.length1 grid-1
-        let gridWidth = Array2D.length2 grid-1
-        let rowWise =
-            match node.y with
-            | y when y = 0 -> [ { x=node.x; y=node.y+1; } ]
-            | y when y >= gridHeight -> [ { x=node.x; y=node.y-1; } ]
-            | y when y > 0 && y < gridHeight -> [ { x=node.x; y=node.y-1; }; { x=node.x; y=node.y+1; } ]
-            | _ -> failwith "Unexpected node y value"
-        let colWise =
-            match node.x with
-            | x when x = 0 -> [ { x=node.x+1; y=node.y; } ]
-            | x when x >= gridWidth -> [ { x=node.x-1; y=node.y; } ]
-            | x when x > 0 && x < gridWidth -> [ { x=node.x-1; y=node.y; }; { x=node.x+1; y=node.y; } ]
-            | _ -> failwith "Unexpected node x value"    
-        rowWise @ colWise
-
-    let heuristic node goal cameFrom =
-        // let last3 = reconstruct [] node cameFrom 3
-        // let sameRow = last3 |> List.map (fun p -> p.y) |> List.distinct |> List.length = 1
-        // let sameCol = last3 |> List.map (fun p -> p.x) |> List.distinct |> List.length = 1
-        // match List.length last3 = 3 && (sameRow || sameCol) with
-        // | true -> distance (node, goal) + 1_000_000_000
-        // | false -> distance (node, goal)
-        distance (node, goal)
-
-    let g grid node =
-        getByPoint grid node |> string |> int
-    
-    let addOrUpdate k v m =
-        match Map.containsKey k m with
-        | false -> Map.add k v m
-        | true ->
-            Map.change k (fun x ->
-                match x with
-                | Some _ -> Some (v)
-                | None -> None
-            ) m
-    
-    let rec aStar start goal grid  = 
-        let rec loop seen (openSet : PriorityQueue<Point, int>) cameFrom fScore gScore  = 
-            let node = openSet.Dequeue()
-            match node = goal with
-            | true -> reconstruct [] node cameFrom -1
+    let rec foo grid goal seen (pq : PriorityQueue<Node', int>) =
+        let getHeatLoss point =
+            Array2D.get grid point.y point.x
+        let gridHeight = Array2D.length1 grid
+        let gridWidth = Array2D.length2 grid
+        match pq.TryDequeue() with
+        | (false, _, _) -> failwith "No solution found"
+        | (true, node, _) -> 
+            let p = node.Node.point
+            let l = node.Node.length
+            let dr, dc = node.Node.direction
+            match p = goal with
+            | true -> node.HeatLoss
             | false ->
-                let newSeen, newOpenSet, newCameFrom, newGScore, newFScore =
-                    getNeighbors node grid
-                    |> List.filter (fun n -> not (Set.contains n seen))
-                    |> List.fold (fun acc neighbor ->
-                        let seen', (openSet' : PriorityQueue<Point, int>), cameFrom', fScore', gScore' = acc
-                        let seen'' = Set.add neighbor seen'
-                        let tentative = (gScore' |> Map.find node) + g grid neighbor
-                        let oldScore =
-                            match gScore' |> Map.tryFind neighbor with
-                            | Some x -> x
-                            | None -> System.Int32.MaxValue
-                        match tentative < oldScore with
-                        | true ->
-                            let cameFrom'' = addOrUpdate neighbor node cameFrom'
-                            let gScore'' = addOrUpdate neighbor tentative gScore'
-                            let f = (tentative + (heuristic neighbor goal cameFrom''))
-                            printfn $"score for {node} to {neighbor} = {f}"
-                            let fScore'' = addOrUpdate neighbor f fScore'
-                            openSet'.Enqueue(neighbor, f)
-                            (seen'', openSet', cameFrom'', fScore'', gScore'')
-                        | false -> (seen'', openSet', cameFrom', fScore', gScore')
-                    ) (seen, openSet, cameFrom, fScore, gScore)
-                loop newSeen newOpenSet newCameFrom newFScore newGScore
-        let seen = Set.empty
-        let cameFrom = Map.empty
-        let fScore = Map.add start (heuristic start goal cameFrom) Map.empty
-        let gScore = Map.add start 0 Map.empty
-        let openSet = new PriorityQueue<Point, int>()
-        openSet.Enqueue(start, 1)
-        loop seen openSet cameFrom fScore gScore
-    
+                match Set.contains node.Node seen with
+                | true -> foo grid goal seen pq
+                | false -> 
+                    let seen' = Set.add node.Node seen
+                    let straight =
+                        match (p.x + dc, p.y + dr) with
+                        | (nc, nr) when (dr, dc) <> (0, 0) && l < 3 &&
+                            0 <= nc && nc < gridWidth &&
+                            0 <= nr && nr < gridHeight ->
+                            [{ Node={ point={ x=nc; y=nr; }; direction=(dr, dc); length=l + 1; }; HeatLoss=(node.HeatLoss + getHeatLoss { x=nc; y=nr; }); }]
+                        | _ -> []
+                    let turns =
+                        [(1,0); (0,1); (-1,0); (0,-1)]
+                        |> List.collect (fun (ndr, ndc) ->
+                            match (p.x + ndc, p.y + ndr) with
+                            | (nc, nr) when (ndr, ndc) <> (dr, dc) && (ndr, ndc) <> (-dr, -dc) &&
+                                0 <= nc && nc < gridWidth &&
+                                0 <= nr && nr < gridHeight ->
+                                [{ Node={ point={ x=nc; y=nr; }; direction=(ndr, ndc); length=1; }; HeatLoss=(node.HeatLoss + getHeatLoss { x=nc; y=nr; }); }]
+                            | _ -> []
+                        )
+                    straight @ turns
+                    |> List.map (fun n -> pq.Enqueue(n, n.HeatLoss))
+                    |> ignore
+                    foo grid goal seen' pq
+
     let parseInput (str : string) =
         str.Split "\n"
-        |> Array.map (fun row -> row |> Seq.toList)
+        |> Array.map (fun row -> row |> Seq.toList |> List.map string |> List.map int)
         |> array2D
     
     let part1 (str : string) =
         let grid = parseInput str
         let gridHeight = Array2D.length1 grid
         let gridWidth = Array2D.length2 grid
-        // let start = { x=0; y=0; }
-        // let goal = { x=gridWidth-1; y=gridHeight-1; }
-        let start = { x=0; y=2; }
-        let goal = { x=3; y=2; }
-        let path = aStar start goal grid
-        printfn "optimal path: %A" path
-        path
-        |> List.tail
-        |> List.map (fun x -> g grid x)
-        |> List.sum
+        let start = { Node={ point={ x=0; y=0; }; direction=(0, 0); length=0; }; HeatLoss=0; }
+        let goal = { x=gridWidth-1; y=gridHeight-1; }
+        let seen = Set.empty
+        let queue = new PriorityQueue<Node', int>()
+        queue.Enqueue(start, 0)
+        foo grid goal seen queue
 
     let part2 (str : string) =
         -1
