@@ -1,8 +1,6 @@
 module Day17Tests
 
 open Xunit
-open Day03
-open Day17
 
 [<Literal>]
 let sample = @"2413432311323
@@ -25,6 +23,15 @@ let ``Day 17-1 sample`` () =
     Assert.Equal(102, res)
 
 [<Fact>]
-let ``Day 17-2 sample`` () =
+let ``Day 17-2 sample 1`` () =
     let res = Day17.part2 sample
-    Assert.Equal(0, res)
+    Assert.Equal(94, res)
+
+[<Fact>]
+let ``Day 17-2 sample 2`` () =
+    let res = Day17.part2 @"111111111111
+999999999991
+999999999991
+999999999991
+999999999991"
+    Assert.Equal(71, res)
