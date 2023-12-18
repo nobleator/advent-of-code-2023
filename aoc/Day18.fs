@@ -33,14 +33,37 @@ module Day18
             | "U" -> [(x,y-r)] @ acc
             | "D" -> [(x,y+r)] @ acc
             | _ -> failwith "Direction not supported"
-        ) [(0,0)]
+        ) [(0L,0L)]
+
+    let hexToCoords moves =
+        moves
+        |> List.fold (fun acc m ->
+            let _, _, (h : string) = m
+            let hexChars =
+                h.TrimStart('(').TrimStart('#').TrimEnd(')')
+                |> Seq.toList
+            let d = hexChars |> List.last
+            let r =
+                hexChars |> List.rev |> List.tail |> List.rev
+                |> List.map string
+                |> String.concat ""
+                |> fun s -> "0"+s
+                |> fun d ->  System.Int64.Parse(d, System.Globalization.NumberStyles.HexNumber)
+            let x, y = acc |> List.head
+            match d with
+            | '0' -> [(x+r,y)] @ acc
+            | '2' -> [(x-r,y)] @ acc
+            | '3' -> [(x,y-r)] @ acc
+            | '1' -> [(x,y+r)] @ acc
+            | _ -> failwith "Direction not supported"
+        ) [(0L,0L)]
 
     let parseInput (str : string) =
         str.Split "\n"
         |> Array.toList
         |> List.map (fun r ->
             match r.Split " " with
-            | [| dir; rng; hex |] -> (dir, rng |> int, hex)
+            | [| dir; rng; hex |] -> (dir, rng |> int64, hex)
             | _ -> failwith "The number of elements in a row is expected to be 3"
         )
 
@@ -51,4 +74,7 @@ module Day18
         abs(interior) + (perimeter / 2.0) + 1.0
 
     let part2 (str : string) =
-        -1
+        let coords = parseInput str |> hexToCoords
+        let interior = coords |> shoelace
+        let perimeter = coords |> perimeter
+        abs(interior) + (perimeter / 2.0) + 1.0
