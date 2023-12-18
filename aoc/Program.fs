@@ -50,5 +50,8 @@ let main args =
     | 16 -> readPuzzleInput "16" |> fun x ->
         Day16.part1 x |> fun y -> printfn $"Part 1: {y}"
         Day16.part2 x |> fun y -> printfn $"Part 2: {y}"
+    | 17 -> readPuzzleInput "17" |> fun x ->
+        Day17.part1 x |> fun y -> printfn $"Part 1: {y}"
+        Day17.part2 x |> fun y -> printfn $"Part 2: {y}"
     | _ -> failwith "This day hasn't been written yet"
     0
