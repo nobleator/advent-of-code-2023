@@ -24,9 +24,9 @@ hdj{m>838:A,pv}
 [<Fact>]
 let ``Day 19-1 sample`` () =
     let res = Day19.part1 sample
-    Assert.Equal(19114, res)
+    Assert.Equal(19114L, res)
 
 [<Fact>]
 let ``Day 19-2 sample`` () =
     let res = Day19.part2 sample
-    Assert.Equal(0, res)
+    Assert.Equal(167409079868000L, res)
