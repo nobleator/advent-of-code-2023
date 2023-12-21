@@ -36,4 +36,21 @@ module Day21
         (start, count', dirt', seen')
     
     let part1 (str : string) goal =
+        let start =
+            parseInput str
+            |> List.filter (fun x -> x |> snd = 'S')
+            |> List.exactlyOne
+            |> fst
+        let _, dirt =
+            parseInput str
+            |> Set.ofList
+            |> Set.partition (fun x -> x |> snd = '#')
+        [1..goal]
+        |> List.fold (fun acc i ->
+            printfn $"stepping {i}"
+            takeStep acc
+        ) (start, 0, dirt, Set.empty)
+        |> fun (_, c, _, _) -> c
+
+    let part2 (str : string) goal =
         -1
