@@ -43,6 +43,13 @@ module Day20
             match queue with
             | node::t ->
                 let priorModule, currentModule, incomingPulse = node
+                match priorModule with
+                | "mr" when currentModule = "qt" && incomingPulse = High -> printfn $"found match for mr: {counter}"
+                | "kk" when currentModule = "qt" && incomingPulse = High -> printfn $"found match for kk: {counter}"
+                | "gl" when currentModule = "qt" && incomingPulse = High -> printfn $"found match for gl: {counter}"
+                | "bb" when currentModule = "qt" && incomingPulse = High -> printfn $"found match for bb: {counter}"
+                | _ -> ()
+                |> ignore
                 let pulseCounts' =
                     match incomingPulse with
                     | Low -> ((pulseCounts |> fst)+1, pulseCounts |> snd)
@@ -97,8 +104,6 @@ module Day20
         let conjState =
             Map.keys types
             |> Seq.map (fun k ->
-                
-                // let tmp = Map.find k children |> List.contains k
                 let parents =
                     Map.filter (fun _ c -> c |> List.contains k)children
                     |> Map.keys
@@ -111,4 +116,22 @@ module Day20
         (pulseCounts |> fst) * (pulseCounts |> snd)
 
     let part2 (str : string) =
-        -1
+        // Find nodes pointing to rx by manual inspection
+        // &mr, &kk, &gl, and &bb -> qt, and &qt -> rx
+        // For each of these nodes, find the cycle at which it will output High
+        let types, children = parseInput str
+        let ffState = Map.keys types |> Seq.map (fun k -> (k, Off)) |> Map.ofSeq
+        let conjState =
+            Map.keys types
+            |> Seq.map (fun k ->
+                let parents =
+                    Map.filter (fun _ c -> c |> List.contains k)children
+                    |> Map.keys
+                    |> Seq.toList
+                (k, parents |> List.map (fun p -> (p, Low)) |> Map.ofList)
+            )
+            |> Map.ofSeq
+        let start = ("", "broadcaster", Low)
+        let (_, _, _) = pulse types children [start] ffState conjState Set.empty (0,0) 5000 1
+        // The LCM of all of these cycles will identify when they sync
+        [| 3907L; 3931L; 3967L; 3989L; |] |> MathNet.Numerics.Euclid.LeastCommonMultiple

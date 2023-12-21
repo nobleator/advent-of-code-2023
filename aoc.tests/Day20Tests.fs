@@ -45,8 +45,3 @@ let ``Day 20-1 sequence of flip flops`` () =
 %b -> con
 &con -> output"
     Assert.Equal(11250000, res)
-
-[<Fact>]
-let ``Day 20-2 sample`` () =
-    let res = Day20.part2 @""
-    Assert.Equal(0, res)
