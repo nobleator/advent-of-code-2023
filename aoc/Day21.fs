@@ -1,9 +1,7 @@
 module Day21
-    open Day03
-    open Day11
+    open Day20
 
-    let orthogonal p1 p2 =
-        (abs(p1.x - p2.x) = 1 && abs(p1.y - p2.y) = 0) || (abs(p1.x - p2.x) = 0 && abs(p1.y - p2.y) = 1)
+    type BigPoint = { x: int64; y: int64}
 
     let parseInput (str : string) =
         str.Split "\n"
@@ -21,21 +19,28 @@ module Day21
             rowAcc @ tmp
         ) []
 
-    let takeStep (start, count, dirt, seen) = 
-        let priorState = dirt |> Set.filter (fun x -> x |> snd = 'S' || x |> snd = 'O')
-        let dirt' =
-            dirt
-            |> Set.filter (fun x -> not (Set.contains x seen))
-            |> Set.map (fun x ->
-                match priorState |> Set.exists (fun y -> orthogonal (x |> fst) (y |> fst)) with
-                | true -> (x |> fst, 'O')
-                | false -> (x |> fst, '.')
+    let nextEdge dirt edge  seen width height =
+        edge
+        |> Set.toList
+        |> List.collect (fun e ->
+            [(0L,1L); (0L,-1L); (1L,0L); (-1L,0L)] |> List.map (fun (nx, ny) ->
+                {x=e.x + nx; y=e.y + ny}
             )
-        let seen' = Set.union (dirt' |> Set.filter (fun x -> x |> snd = 'S' || x |> snd = 'O')) seen
-        let count' = seen' |> Set.filter (fun x -> distance ((x |> fst), start) % 2 = 0) |> Set.count
-        (start, count', dirt', seen')
-    
-    let part1 (str : string) goal =
+        )
+        |> List.filter (fun p ->
+            let mx = if p.x < 0 then (3L * width + p.x) % width else p.x % width
+            let my = if p.y < 0 then (3L * height + p.y) % height else p.y % height
+            let mirroredPoint = {x=mx; y=my}
+            Set.contains mirroredPoint dirt && not (Set.contains p seen)
+        )
+        |> Set.ofList
+
+    let takeStep dirt edge seen width height = 
+        let edge' = nextEdge dirt edge seen width height
+        let seen' = Set.union seen edge'
+        (edge', seen')
+
+    let walk (str : string) goal width height =
         let start =
             parseInput str
             |> List.filter (fun x -> x |> snd = 'S')
@@ -45,12 +50,40 @@ module Day21
             parseInput str
             |> Set.ofList
             |> Set.partition (fun x -> x |> snd = '#')
-        [1..goal]
+        let dirt' = dirt |> Set.map fst
+        let results = [(0, Set.empty); (1, Set.empty);] |> Map.ofList
+        [0..goal]
         |> List.fold (fun acc i ->
-            printfn $"stepping {i}"
-            takeStep acc
-        ) (start, 0, dirt, Set.empty)
-        |> fun (_, c, _, _) -> c
+            let (parity, dirt, edges, results) = acc
+            let seen = Map.find parity results
+            let e', s' = takeStep dirt edges seen width height
+            let r' = addOrUpdate parity s' results
+            let p' = 1-parity
+            (p', dirt, e', r')
+        ) (1, dirt', Set.singleton start, results)
+        |> fun (_,_,_,r) -> Map.find (goal % 2) r |> Set.count
+    
+    let part1 (str : string) goal =
+        let input = str.Split "\n"
+        let height = input |> Array.length |> int64
+        let width = input |> Array.head |> String.length |> int64
+        walk str goal width height
 
     let part2 (str : string) goal =
-        -1
+        let input = str.Split "\n"
+        let height = input |> Array.length |> int64
+        let width = input |> Array.head |> String.length |> int64
+        let res =
+            [ goal % height; goal % height + height; goal % height + (height * 2L); ]
+            |> List.map (fun x -> (walk str (x |> int) width height) |> int64)
+        match res with
+        | [ s'; s''; s''' ] ->
+            // Magic interpolation formula
+            let m = s'' - s'
+            let n = s''' - s''
+            let a = (n - m) / 2L
+            let b = m - 3L * a
+            let c = s' - b - a
+            let ceiling = ceil ((goal |> float) / (height |> float))
+            a * (ceiling**2.0 |> int64) + b * (ceiling |> int64) + c
+        | _ -> failwith "Expected 3 results"
