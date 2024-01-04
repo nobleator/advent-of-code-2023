@@ -89,9 +89,7 @@ module Day22
             |> List.filter (fun b ->  
                 supports
                 |> Map.find b
-                |> List.forall (fun b2 ->
-                    (supportedBy |> Map.find b2).Length >= 2
-                )
+                |> List.forall (fun b2 -> supportedBy |> Map.find b2 |> List.length >= 2)
             )
         redundantBricks.Length
 
