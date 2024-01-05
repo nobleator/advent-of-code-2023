@@ -26,5 +26,5 @@ let ``Day 22-1 settle to ground`` () =
 
 [<Fact>]
 let ``Day 22-2 sample`` () =
-    let res = Day22.part2 (sample, 10)
-    Assert.Equal(0, res)
+    let res = Day22.part2 sample
+    Assert.Equal(7, res)

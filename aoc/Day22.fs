@@ -80,6 +80,28 @@ module Day22
         )
         |> Map.ofList
 
+    let cascade supports supportedBy brick =
+        let rec inner queue falling =
+            match queue with
+            | b::rest ->
+                let nextFalling =
+                    supports
+                    |> Map.find b
+                    |> List.filter (fun b2 ->
+                        supportedBy
+                        |> Map.find b2
+                        |> List.forall (fun x -> falling |> Set.contains x)
+                    )
+                let falling' = falling |> Set.union (nextFalling |> Set.ofList)
+                let queue' = rest @ nextFalling
+                inner queue' falling'
+            | _ -> falling
+        let bricks =
+            supports
+            |> Map.find brick
+            |> List.filter (fun b2 -> supportedBy |> Map.find b2 |> List.length = 1)
+        inner bricks (bricks |> Set.ofList)
+
     let part1 (str : string) =
         let bricks = parseInput str |> settle
         let supports = bricks |> getSupports
@@ -93,5 +115,11 @@ module Day22
             )
         redundantBricks.Length
 
-    let part2 (str : string, expansionFactor : int) =
-        -1
+    let part2 (str : string) =
+        let bricks = parseInput str |> settle
+        let supports = bricks |> getSupports
+        let supportedBy = bricks |> getSupportedBy
+        bricks
+        |> List.fold (fun acc b ->
+            acc + (cascade supports supportedBy b |> Set.count)
+        ) 0
