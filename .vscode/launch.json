@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/aoc/bin/Debug/net7.0/aoc.dll",
-            "args": ["22"],
+            "args": ["23"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole",
