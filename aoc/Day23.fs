@@ -131,9 +131,15 @@ module Day23
         [(0,1); (0,-1); (1,0); (-1,0);]
         |> List.map (fun (nx, ny) -> { x=point.x+nx; y=point.y+ny; })
         |> List.filter (fun np ->
+            if List.contains np [{x=106;y=17;}; {x=108;y=17;}; {x=107;y=16;}; {x=107;y=18;};]
+            then
+                printfn $"{np} being checked by {point}"
             let inBounds = np.x > 0 && np.x < gridWidth && np.y > 0 && np.y < gridHeight
             let c = if inBounds then Day16.getByPoint grid np else '#'
-            inBounds && c <> '#' && not (Set.contains np seen)
+            let alreadySeen = Set.contains np seen
+            inBounds &&
+            c <> '#' &&
+            not alreadySeen
         )
 
     let getJunctions grid start =
@@ -142,6 +148,10 @@ module Day23
         let rec inner queue =
             match queue with
             | candidate::rest ->
+                if List.contains candidate [{x=107;y=17;}; {x=127;y=33;}; {x=127;y=61;}; {x=129;y=89;}; {x=133;y=99;};]
+                then
+                    printfn "missing junction"
+
                 seen <- Set.add candidate seen
                 let neighbors = getNeighbors grid candidate seen
                 match neighbors with
@@ -158,6 +168,7 @@ module Day23
         let mutable graph = Map.empty<Point,int>
         let mutable seen = Set.singleton start
         let rec inner queue =
+            let start2 = start
             match queue with
             | h::t ->
                 let (candidate, counter) = h
@@ -212,16 +223,22 @@ module Day23
         let gridWidth = (grid |> Array2D.length2)
         let start = { x=1; y=0; }
         let goal = { x=gridWidth-2; y=gridHeight-1; }
+        let expectedJunctions =
+            List.allPairs [0..gridWidth-1] [0..gridHeight-1]
+            |> List.filter (fun (x,y) -> Day16.getByPoint grid {x=x;y=y;} = 'X')
+            |> List.map (fun (x,y) -> {x=x;y=y;})
+            |> Set.ofList
         let junctions = getJunctions grid start |> Set.add goal
+        let missing = Set.difference expectedJunctions junctions
         let graph =
             junctions
             |> Set.map (fun j -> (j, buildGraph grid junctions j))
             |> Map.ofSeq
         // let test = Map.findKey (fun k v -> Map.exists (fun k v2 -> List.contains {x=85;y=59;} v2) v) graph
-        let unexpectedJunctions =
-            graph
-            |> Map.filter (fun k v ->
-                v |> Map.count > 4
-            )
+        // let unexpectedJunctions =
+        //     graph
+        //     |> Map.filter (fun k v ->
+        //         v |> Map.count > 4
+        //     )
         // (bruteForce graph start goal |> List.map snd |> List.max)-1
         -1
