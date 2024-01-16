@@ -23,6 +23,13 @@ let ``Day 25-1 sample`` () =
     Assert.Equal(54, res)
 
 [<Fact>]
+let ``Day 25-1 cuts`` () =
+    let res = Day25.part1 @"1: 2 3 4
+2: 1 4 5
+4: 1 2 3 5"
+    Assert.Equal(-1, res)
+
+[<Fact>]
 let ``Day 25-2 sample`` () =
     let res = Day25.part2 sample
     Assert.Equal(0, res)
